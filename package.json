@@ -1,0 +1,16 @@
+{
+  "name": "hsth",
+  "version": "1.0.0",
+  "description": "quickly add hosts to hosts file from json file.",
+  "main": "hsth-cli.js",
+  "scripts": {
+    "test": "hstsh"
+  },
+  "keywords": [
+    "hstsh",
+    "hosts",
+    "setup"
+  ],
+  "author": "Krzysztof Weglinski <krzysiek@csth.pl> (http://csth.pl)",
+  "license": "Apache-2.0"
+}
