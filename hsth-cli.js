@@ -1,6 +1,7 @@
 #! /usr/bin/env node
 
 var fs = require('fs'),
+  http = require('http'),
   args = process.argv.slice(2);
 
 function hsth(obj) {
@@ -25,7 +26,7 @@ hsth.prototype = {
 
       } else {
         self.opts.wrote = false;
-        self.manipulate();
+        self.getJSON();
       }
       console.log(self.opts.wrote)
     });
@@ -33,20 +34,15 @@ hsth.prototype = {
   manipulate: function(obj) {
     var self = this,
       dom, ip, hosts = '';
-    fs.readFile(args[0], 'utf8', function(err, obj) {
-      if (err) {
-        return console.log(err);
-      }
-      var obj = JSON.parse(obj)
 
 
-      for (var i = 0, len = obj.length; i < len; i++) {
-        dom = Object.keys(obj[i]);
-        ip = obj[i][dom];
-        hosts += ip + ' ' + dom + '\n';
-      }
-      self.writeHosts(hosts);
-    });
+    for (var i = 0, len = obj.length; i < len; i++) {
+      dom = Object.keys(obj[i]);
+      ip = obj[i][dom];
+      hosts += ip + ' ' + dom + '\n';
+    }
+    self.writeHosts(hosts);
+
   },
   writeHosts: function(lines) {
     var self = this;
@@ -65,10 +61,43 @@ hsth.prototype = {
 
       fs.writeFile('hosts', result, 'utf8', function(err) {
         if (err) return console.log(err);
-        self.manipulate();
+        self.getJSON();
       });
     });
+  },
+  getJSON: function(){
+    var type = args[0].indexOf('://'),
+      self = this;
+    switch (type) {
+      case -1:
+        fs.readFile(args[0], 'utf8', function(err, obj) {
+          if (err) {
+            return console.log(err);
+          }
+          var obj = JSON.parse(obj)
+          self.manipulate(obj);
+        });
+        break;
+      default:
+        http.get(args[0], function(res) {
+          var body = '';
+
+          res.on('data', function(chunk) {
+            body += chunk;
+          });
+
+          res.on('end', function() {
+            var obj = JSON.parse(body);
+            self.manipulate(obj);
+            console.log("Got a response: ", obj);
+          });
+        }).on('error', function(e) {
+          console.log("Got an error: ", e);
+        });
+        break;
+    }
   }
+
 }
 
 new hsth();
